@@ -25,6 +25,7 @@ class JsonRecorder(BaseRecorder):
         self.out = out
 
         self._results = dict()
+        self._results['metadata'] = dict()
         self._results['iterations'] = []
 
     def startup(self, group):
