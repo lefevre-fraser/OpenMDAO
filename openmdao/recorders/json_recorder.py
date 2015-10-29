@@ -34,8 +34,8 @@ class JsonRecorder(BaseRecorder):
     def record_iteration(self, params, unknowns, resids, metadata):
         def munge(val):
             if isinstance(val, numpy.ndarray):
-                return ",".join(map(str, val))
-            return str(val)
+                return val.tolist()
+            return val
 
         this_iteration = dict()
         for key, val in unknowns.iteritems():
