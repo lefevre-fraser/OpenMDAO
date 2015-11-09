@@ -6,6 +6,7 @@ from openmdao.drivers.predeterminedruns_driver import PredeterminedRunsDriver
 from six import moves, iteritems, itervalues
 from random import shuffle, randint, seed
 import numpy as np
+import itertools
 
 
 class LatinHypercubeDriver(PredeterminedRunsDriver):
@@ -31,16 +32,25 @@ class LatinHypercubeDriver(PredeterminedRunsDriver):
 
         # Map LHC to buckets
         buckets = dict()
-        for j in range(self.num_design_vars):
-            bounds = design_vars[design_vars_names[j]]
-            design_var_buckets = self._get_buckets(bounds['low'], bounds['high'])
-            buckets[design_vars_names[j]] = list()
-            for i in range(self.num_samples):
-                buckets[design_vars_names[j]].append(design_var_buckets[rand_lhc[i, j]])
+        for design_var_name in design_vars_names:
+            metadata = design_vars[design_var_name]
+            if metadata.get('type', 'double') == 'double':
+                bucket_walls = np.linspace(metadata['low'], metadata['high'], num=self.num_samples + 1)
+                buckets[design_var_name] = [np.random.uniform(low, high) for low, high in
+                                            moves.zip(bucket_walls[0:-1], bucket_walls[1:])]
+            elif metadata.get('type') == 'enum':
+                # length is generated such that all items have an equal chance of appearing when num_samples % len(items) != 0
+                length = self.num_samples + (-self.num_samples % len(metadata['items']))
+                buckets[design_var_name] = list(itertools.islice(itertools.cycle(metadata['items']), length))
+            elif metadata.get('type') == 'int':
+                num_items = int(metadata['high'] - metadata['low'] + 1)
+                length = self.num_samples + (-self.num_samples % num_items)
+                buckets[design_var_name] = list(
+                    itertools.islice(itertools.cycle(range(int(metadata['low']), int(metadata['high'] + 1))), length))
 
         # Return random values in given buckets
         for i in moves.xrange(self.num_samples):
-            yield dict(((key, np.random.uniform(bounds[i][0], bounds[i][1])) for key, bounds in iteritems(buckets)))
+            yield dict(((key, values[i]) for key, values in iteritems(buckets)))
 
     def _get_lhc(self):
         """Generates a Latin Hypercube based on the number of samplts and the number of design variables."""
