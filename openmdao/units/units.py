@@ -18,6 +18,7 @@ Justin Gray."""
 
 import re
 import os.path
+import pkg_resources
 from collections import OrderedDict
 from six import iteritems
 from six.moves.configparser import RawConfigParser as ConfigParser
@@ -880,5 +881,5 @@ def get_conversion_tuple(src_units, target_units):
 
 
 # Load in the default unit library
-with open(os.path.join(os.path.dirname(__file__), 'unit_library.ini')) as default_lib:
+with pkg_resources.resource_stream(__name__, "unit_library.ini") as default_lib:
     import_library(default_lib)

@@ -6,6 +6,7 @@ from time import time as etime
 import inspect
 import fnmatch
 import argparse
+import pkg_resources
 import json
 import atexit
 import types
@@ -537,9 +538,7 @@ def prof_view():
     call_graph, totals = process_profile(options.rawfiles)
 
     viewer = "icicle.html"
-    code_dir = os.path.dirname(os.path.abspath(__file__))
-
-    with open(os.path.join(code_dir, viewer), "r") as f:
+    with pkg_resources.resource_stream("openmdao.util.profile", viewer) as f:
         template = f.read()
 
     graphjson = json.dumps(call_graph)
